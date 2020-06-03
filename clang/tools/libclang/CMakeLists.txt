@@ -20,6 +20,7 @@ set(SOURCES
   CXType.cpp
   Indexing.cpp
   FatalErrorHandler.cpp
+  PathogenLayoutExtensions.cpp
 
   ADDITIONAL_HEADERS
   CIndexDiagnostic.h
