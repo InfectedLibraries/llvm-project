@@ -670,7 +670,7 @@ struct PathogenConstantValueInfo
     bool HasSideEffects;
     bool HasUndefinedBehavior;
     PathogenConstantValueKind Kind;
-    //! If Kind is UnsignedInteger, SignedInteger, or FloatingPointer: This is the size of the value in bits
+    //! If Kind is UnsignedInteger, SignedInteger, or FloatingPoint: This is the size of the value in bits
     //! If Kind is String: This is one of PathogenStringConstantKind
     //! If Kind is Unknown, this is the Clang kind (APValue::ValueKind)
     int SubKind;
@@ -683,6 +683,30 @@ struct PathogenConstantValueInfo
     uint64_t Value;
 };
 static_assert(sizeof(PathogenConstantValueInfo::Value) >= sizeof(void*), "PathogenConstantValueInfo::Value must be able to hold a pointer.");
+
+#include <iostream>
+
+std::ostream& operator<<(std::ostream& os, const llvm::fltSemantics& semantics)
+{
+    os //<< std::hex << "Ptr = 0x" << &semantics << std::dec
+        << " MaxE = " << llvm::APFloat::semanticsMaxExponent(semantics)
+        << " MinE = " << llvm::APFloat::semanticsMinExponent(semantics)
+        << " Prec = " << llvm::APFloat::semanticsPrecision(semantics)
+        << " SzBits = " << llvm::APFloat::semanticsSizeInBits(semantics);
+
+    os << " ";
+    if (&semantics == &llvm::APFloat::IEEEhalf()) { os << "(Half)"; }
+    else if (&semantics == &llvm::APFloat::IEEEsingle()) { os << "(Single)"; }
+    else if (&semantics == &llvm::APFloat::IEEEdouble()) { os << "(Double)"; }
+    else if (&semantics == &llvm::APFloat::x87DoubleExtended()) { os << "(x87Double)"; }
+    else if (&semantics == &llvm::APFloat::IEEEquad()) { os << "(Quad)"; }
+    else if (&semantics == &llvm::APFloat::PPCDoubleDouble()) { os << "(PPCDoubleDouble)"; }
+    else if (&semantics == &llvm::APFloat::Bogus()) { os << "(Bogus)"; }
+    else if (&semantics == &llvm::APFloat::PPCDoubleDoubleLegacy()) { os << "(PPCDoubleDoubleLegacy)"; }
+    else { os << "(Non-standard)"; }
+
+    return os;
+}
 
 //! Tries to compute the constant value of the specified variable declaration or expression
 //! Returns false if Clang could not determine the constant value of the specified cursor.
@@ -754,10 +778,38 @@ PATHOGEN_EXPORT bool pathogen_ComputeConstantValue(CXCursor cursor, PathogenCons
     }
     else if (value.isFloat())
     {
+        static bool first = true;
+
+        if (first)
+        {
+            first = false;
+            std::cout
+                << "------------------------------------------------------------------" << std::endl
+                << "All Float Semantics:" << std::endl
+                << "                 Half: " << llvm::APFloat::IEEEhalf() << std::endl
+                << "               Single: " << llvm::APFloat::IEEEsingle() << std::endl
+                << "               Double: " << llvm::APFloat::IEEEdouble() << std::endl
+                << "            x87Double: " << llvm::APFloat::x87DoubleExtended() << std::endl
+                << "                 Quad: " << llvm::APFloat::IEEEquad() << std::endl
+                << "      PPCDoubleDouble: " << llvm::APFloat::PPCDoubleDouble() << std::endl
+                << "                Bogus: " << llvm::APFloat::Bogus() << std::endl
+                << "PPCDoubleDoubleLegacy: " << llvm::APFloat::PPCDoubleDoubleLegacy() << std::endl
+                << "------------------------------------------------------------------" << std::endl
+            ;
+        }
+
         llvm::APFloat floatValue = value.getFloat();
         info->Kind = PathogenConstantValueKind::FloatingPoint;
         info->SubKind = (int)floatValue.getSizeInBits(floatValue.getSemantics());
         info->Value = floatValue.bitcastToAPInt().getZExtValue();
+        std::cout << "Info: ";
+        std::cout
+            << "Float value: '" << value.getAsString(context, expression->getType())
+            << "' bits = 0x" << std::hex << info->Value << std::dec
+            << " SizeBits = " << info->SubKind
+            //<< " SemanticsKind: " << llvm::APFloat::SemanticsToEnum(floatValue.getSemantics())
+            << std::endl;
+        std::cout << "  Semantics: " << floatValue.getSemantics() << std::endl;
     }
     else if (value.isNullPointer())
     {

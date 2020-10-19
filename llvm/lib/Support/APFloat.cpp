@@ -170,6 +170,9 @@ namespace llvm {
   const fltSemantics &APFloatBase::PPCDoubleDouble() {
     return semPPCDoubleDouble;
   }
+  const fltSemantics &APFloatBase::PPCDoubleDoubleLegacy() {
+    return semPPCDoubleDoubleLegacy;
+  }
 
   /* A tight upper bound on number of parts required to hold the value
      pow(5, power) is
@@ -3071,23 +3074,38 @@ APInt IEEEFloat::convertHalfAPFloatToAPInt() const {
 // and treating the result as a normal integer is unlikely to be useful.
 
 APInt IEEEFloat::bitcastToAPInt() const {
-  if (semantics == (const llvm::fltSemantics*)&semIEEEhalf)
+  if (semantics == (const llvm::fltSemantics *)&semIEEEhalf) {
+    printf("IEEEFloat::bitcastToAPInt HALF\n");
     return convertHalfAPFloatToAPInt();
+  }
 
-  if (semantics == (const llvm::fltSemantics*)&semIEEEsingle)
+  if (semantics == (const llvm::fltSemantics *)&semIEEEsingle) {
+    printf("IEEEFloat::bitcastToAPInt SINGLE\n");
     return convertFloatAPFloatToAPInt();
+  }
 
-  if (semantics == (const llvm::fltSemantics*)&semIEEEdouble)
+  if (semantics == (const llvm::fltSemantics *)&semIEEEdouble) {
+    printf("IEEEFloat::bitcastToAPInt DOUBLE\n");
     return convertDoubleAPFloatToAPInt();
+  }
 
-  if (semantics == (const llvm::fltSemantics*)&semIEEEquad)
+  if (semantics == (const llvm::fltSemantics *)&semIEEEquad) {
+    printf("IEEEFloat::bitcastToAPInt QUAD\n");
     return convertQuadrupleAPFloatToAPInt();
+  }
 
-  if (semantics == (const llvm::fltSemantics *)&semPPCDoubleDoubleLegacy)
+  if (semantics == (const llvm::fltSemantics *)&semPPCDoubleDoubleLegacy) {
+    printf("IEEEFloat::bitcastToAPInt PPCDOUBLEDOUBLELEGACY\n");
     return convertPPCDoubleDoubleAPFloatToAPInt();
+  }
 
   assert(semantics == (const llvm::fltSemantics*)&semX87DoubleExtended &&
          "unknown format!");
+  if (semantics == (const llvm::fltSemantics *)&semX87DoubleExtended) {
+    printf("IEEEFloat::bitcastToAPInt SEMx87DOUBLEEXTENDED\n");
+  } else {
+    printf("IEEEFloat::bitcastToAPInt UNKNOWN\n");
+  }
   return convertF80LongDoubleAPFloatToAPInt();
 }
 
@@ -4346,6 +4364,7 @@ hash_code hash_value(const DoubleAPFloat &Arg) {
 }
 
 APInt DoubleAPFloat::bitcastToAPInt() const {
+  printf("DoubleAPFloat::bitcastToAPInt!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
   assert(Semantics == &semPPCDoubleDouble && "Unexpected Semantics");
   uint64_t Data[] = {
       Floats[0].bitcastToAPInt().getRawData()[0],
@@ -4522,17 +4541,23 @@ APFloat::APFloat(const fltSemantics &Semantics, StringRef S)
   consumeError(StatusOrErr.takeError());
 }
 
+#include <stdio.h>
+
 APFloat::opStatus APFloat::convert(const fltSemantics &ToSemantics,
                                    roundingMode RM, bool *losesInfo) {
   if (&getSemantics() == &ToSemantics) {
+    printf("APFloat::convert IDENTITY\n");
     *losesInfo = false;
     return opOK;
   }
   if (usesLayout<IEEEFloat>(getSemantics()) &&
-      usesLayout<IEEEFloat>(ToSemantics))
+      usesLayout<IEEEFloat>(ToSemantics)) {
+    printf("APFloat::convert IEEEFloat -> IEEEFloat\n");
     return U.IEEE.convert(ToSemantics, RM, losesInfo);
+  }
   if (usesLayout<IEEEFloat>(getSemantics()) &&
       usesLayout<DoubleAPFloat>(ToSemantics)) {
+    printf("APFloat::convert IEEEFloat -> DoubleAPFloat\n");
     assert(&ToSemantics == &semPPCDoubleDouble);
     auto Ret = U.IEEE.convert(semPPCDoubleDoubleLegacy, RM, losesInfo);
     *this = APFloat(ToSemantics, U.IEEE.bitcastToAPInt());
@@ -4540,10 +4565,12 @@ APFloat::opStatus APFloat::convert(const fltSemantics &ToSemantics,
   }
   if (usesLayout<DoubleAPFloat>(getSemantics()) &&
       usesLayout<IEEEFloat>(ToSemantics)) {
+    printf("APFloat::convert DoubleAPFloat -> IEEEFloat\n");
     auto Ret = getIEEE().convert(ToSemantics, RM, losesInfo);
     *this = APFloat(std::move(getIEEE()), ToSemantics);
     return Ret;
   }
+  printf("APFloat::convert INVALID\n");
   llvm_unreachable("Unexpected semantics");
 }
 

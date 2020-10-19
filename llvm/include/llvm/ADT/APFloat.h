@@ -166,6 +166,7 @@ struct APFloatBase {
   static const fltSemantics &IEEEquad() LLVM_READNONE;
   static const fltSemantics &PPCDoubleDouble() LLVM_READNONE;
   static const fltSemantics &x87DoubleExtended() LLVM_READNONE;
+  static const fltSemantics &PPCDoubleDoubleLegacy() LLVM_READNONE;
 
   /// A Pseudo fltsemantic used to construct APFloats that cannot conflict with
   /// anything real.
