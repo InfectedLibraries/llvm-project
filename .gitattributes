@@ -1,0 +1,3 @@
+# Don't attempt end of line normalization
+# (It causes issues when sharing a directory between Windows and WSL.)
+* -text
