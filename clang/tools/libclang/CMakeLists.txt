@@ -29,6 +29,15 @@ set(SOURCES
   Rewrite.cpp
   PathogenExtensions.cpp
 
+  libClangSharp/CIndexDiagnostic.cpp
+  libClangSharp/ClangSharp.cpp
+  libClangSharp/CXCursor.cpp
+  libClangSharp/CXLoadedDiagnostic.cpp
+  libClangSharp/CXSourceLocation.cpp
+  libClangSharp/CXString.cpp
+  libClangSharp/CXTranslationUnit.cpp
+  libClangSharp/CXType.cpp
+
   ADDITIONAL_HEADERS
   CIndexDiagnostic.h
   CIndexer.h
@@ -40,6 +49,15 @@ set(SOURCES
   CXType.h
   Index_Internal.h
   ../../include/clang-c/Index.h
+
+  libClangSharp/CIndexDiagnostic.h
+  libClangSharp/ClangSharp.h
+  libClangSharp/CXCursor.h
+  libClangSharp/CXLoadedDiagnostic.h
+  libClangSharp/CXSourceLocation.h
+  libClangSharp/CXString.h
+  libClangSharp/CXTranslationUnit.h
+  libClangSharp/CXType.h
   )
 
 set(LIBS
