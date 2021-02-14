@@ -108,6 +108,9 @@ if(MSVC)
   set(LLVM_EXPORTED_SYMBOL_FILE)
 endif()
 
+# Disable the exports file as a workaround for https://github.com/InfectedLibraries/llvm-project/issues/3
+set(LLVM_EXPORTED_SYMBOL_FILE)
+
 if(LLVM_ENABLE_PIC OR (WIN32 AND NOT LIBCLANG_BUILD_STATIC))
   set(ENABLE_SHARED SHARED)
 endif()
