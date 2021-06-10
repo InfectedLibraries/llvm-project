@@ -63,6 +63,7 @@ set(LIBS
   clangSema
   clangSerialization
   clangTooling
+  clangCodeGen
   LLVMSupport
 )
 
